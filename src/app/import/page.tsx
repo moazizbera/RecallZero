@@ -16,6 +16,32 @@ export default async function ImportPage() {
   const readiness = getBackendReadiness();
   const activityPreview = activity.slice(0, 4);
   const importScrollAreaClass = "content-scroll";
+  const proofAssets = [
+    {
+      title: "Dashboard hero",
+      detail: "Capture KPIs, the active dataset, recent activity, and the incident pulse panel.",
+      href: "/",
+      hrefLabel: "Open dashboard",
+    },
+    {
+      title: "Import center",
+      detail: "Capture the current data posture, readiness status, import tools, and activity log together.",
+      href: "/import",
+      hrefLabel: "Refresh import center",
+    },
+    {
+      title: "Backend proof",
+      detail: "Capture the JSON readiness endpoint or the import-page readiness card after AWS env vars are configured.",
+      href: "/api/system/readiness",
+      hrefLabel: "Open readiness endpoint",
+    },
+    {
+      title: "Incident war room",
+      detail: "Capture one high-severity incident with locations, tasks, and timeline evidence visible.",
+      href: "/incidents/INC-240601-A",
+      hrefLabel: "Open sample war room",
+    },
+  ];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-5 md:px-6 lg:px-8">
@@ -345,6 +371,64 @@ export default async function ImportPage() {
             <div className="rounded-[1.3rem] border border-line bg-white/70 px-4 py-4">
               The dashboard can reset instantly through the same repository boundary.
             </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="proof-pack" className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+        <article className="panel-shell panel-shell-surface">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-accent">
+            Submission pack
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+            Capture these proof assets
+          </h2>
+          <div className={`mt-6 space-y-4 ${importScrollAreaClass}`}>
+            {proofAssets.map((asset) => (
+              <div
+                key={asset.title}
+                className="rounded-[1.3rem] border border-line bg-white/70 px-4 py-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-semibold text-foreground">{asset.title}</p>
+                  <a
+                    href={asset.href}
+                    className="text-sm font-semibold text-accent underline decoration-transparent hover:decoration-current"
+                  >
+                    {asset.hrefLabel}
+                  </a>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-muted">{asset.detail}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel-shell panel-shell-muted">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-accent">
+            Recording order
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+            Three-minute winning flow
+          </h2>
+          <div className={`mt-6 space-y-4 ${importScrollAreaClass}`}>
+            {[
+              "Open the dashboard and frame incident count, affected orders, and revenue at risk.",
+              "Switch roles once to prove the product adapts to different operators.",
+              "Open this import center and show the backend readiness card plus AWS proof endpoint.",
+              "Run one demo reset or import, then point to the activity log update.",
+              "Open the war room and close on tasks, impacted locations, and the audit timeline.",
+            ].map((step, index) => (
+              <div
+                key={step}
+                className="flex gap-4 rounded-[1.3rem] border border-line bg-surface px-4 py-4"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#efe3d3] font-mono text-xs font-semibold text-foreground">
+                  {index + 1}
+                </div>
+                <p className="text-sm leading-6 text-muted">{step}</p>
+              </div>
+            ))}
           </div>
         </article>
       </section>
