@@ -1,0 +1,4 @@
+incident_id,task_id,title,team,due_in,status,assignee,sort_order
+INC-240701-A,TASK-240701-A-01,Lock sellable inventory for affected SKUs,Warehouse Ops,15 min,In progress,Maya Patel,0
+INC-240701-A,TASK-240701-A-02,Prepare retail pull list and store instructions,Field Ops,30 min,Queued,Jordan Hayes,1
+INC-240701-B,TASK-240701-B-01,Update compliance case note,Compliance,1 hr,Queued,Rae Moss,0

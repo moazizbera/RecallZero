@@ -1,0 +1,4 @@
+incident_id,name,type,region,status,affected_units,owner,sort_order
+INC-240701-A,Atlanta Fulfillment Hub,Warehouse,US-East,Locked,1430,Maya Patel,0
+INC-240701-A,Phoenix Distribution Center,Warehouse,US-West,Locked,980,Chris Long,1
+INC-240701-B,Chicago Retail Cluster,Retail,Midwest,Pending review,260,Field Operations,0

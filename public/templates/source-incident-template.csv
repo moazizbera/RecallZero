@@ -1,0 +1,3 @@
+supplier,supplier_lot,product_family,severity,affected_skus,affected_orders,affected_locations,revenue_at_risk,regions,started_at,last_updated,notifications_queued,compliance_state
+NorthRiver Ingredients,NR-ACV-2408-01,Wellness gummies,Severity A,12,186,3,48250,US-East|US-West|Midwest,08:12 UTC,10:04 UTC,4,Generated from supplier and order exposure import
+ClearSpring Labs,CS-MGN-2408-04,Magnesium sachets,Severity B,4,74,2,12800,Midwest|West,14:40 UTC,16:10 UTC,2,Generated from source import review

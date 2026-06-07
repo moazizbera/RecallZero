@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Incident {
+  id                 String             @id
+  title              String
+  summary            String
+  supplier           String
+  supplierLot        String
+  severity           String
+  startedAt          DateTime
+  lastUpdatedAt      DateTime
+  notificationsQueued Int
+  complianceState    String
+  affectedSkus       Int
+  affectedOrders     Int
+  affectedLocations  Int
+  impactedRevenue    Int
+  metrics            IncidentMetric[]
+  locations          ImpactLocation[]
+  tasks              RecallTask[]
+  timeline           TimelineEvent[]
+  architectureNotes  ArchitectureNote[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([severity])
+  @@index([lastUpdatedAt])
+}
+
+model IncidentMetric {
+  id        String   @id @default(cuid())
+  incidentId String
+  label     String
+  value     String
+  delta     String
+  sortOrder Int
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, sortOrder])
+}
+
+model ImpactLocation {
+  id            String   @id @default(cuid())
+  incidentId    String
+  name          String
+  type          String
+  region        String
+  status        String
+  affectedUnits Int
+  owner         String
+  sortOrder     Int
+  incident      Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, sortOrder])
+}
+
+model RecallTask {
+  id        String   @id
+  incidentId String
+  title     String
+  team      String
+  dueIn     String
+  status    String
+  assignee  String
+  sortOrder Int
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, sortOrder])
+}
+
+model TimelineEvent {
+  id        String   @id @default(cuid())
+  incidentId String
+  timeLabel String
+  title     String
+  detail    String
+  sortOrder Int
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, sortOrder])
+}
+
+model ArchitectureNote {
+  id        String   @id @default(cuid())
+  incidentId String
+  body      String
+  sortOrder Int
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, sortOrder])
+}

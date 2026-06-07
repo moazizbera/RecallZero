@@ -1,0 +1,3 @@
+incident_id,title,summary,supplier,supplier_lot,severity,affected_skus,affected_orders,affected_locations,impacted_revenue,compliance_state,notifications_queued
+INC-240701-A,Contaminated apple cider vinegar concentrate,Ingredient lot contamination detected across wellness gummies and protein bars.,NorthRiver Ingredients,NR-ACV-2407-01,Severity A,12,186,3,48250,Regulatory review package in progress,4
+INC-240701-B,Mislabelled allergen warning on wellness gummies,Packaging artwork mismatch may expose customers with allergen sensitivities.,ClearSpring Labs,CS-GLM-2407-04,Severity B,4,74,2,12800,Monitoring in progress,2

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1780348393556-e2gq0l",
+    "timestamp": "2026-06-01T21:13:13.556Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to compliance."
+  },
+  {
+    "id": "1780346749729-c3v7p0",
+    "timestamp": "2026-06-01T20:45:49.729Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to compliance."
+  },
+  {
+    "id": "1780346748770-h80moe",
+    "timestamp": "2026-06-01T20:45:48.770Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to store."
+  },
+  {
+    "id": "1780346306475-spne5c",
+    "timestamp": "2026-06-01T20:38:26.475Z",
+    "action": "Demo reset",
+    "persistenceMode": "fallback",
+    "detail": "Reset the fallback store to 2 demo incidents."
+  },
+  {
+    "id": "1780346302726-befprc",
+    "timestamp": "2026-06-01T20:38:22.726Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to store."
+  },
+  {
+    "id": "1780346301654-pqq1eg",
+    "timestamp": "2026-06-01T20:38:21.654Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to compliance."
+  },
+  {
+    "id": "1780344853054-ymfm85",
+    "timestamp": "2026-06-01T20:14:13.054Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to compliance."
+  },
+  {
+    "id": "1780344831847-nzq0yj",
+    "timestamp": "2026-06-01T20:13:51.848Z",
+    "action": "Role switch",
+    "persistenceMode": "fallback",
+    "detail": "Switched the dashboard view to executive."
+  }
+]
