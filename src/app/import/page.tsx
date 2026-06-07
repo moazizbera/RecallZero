@@ -22,7 +22,7 @@ export default async function ImportPage() {
                 Import center
               </span>
               <span className="rounded-full border border-line bg-white/80 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
-                {summary.persistenceMode === "database" ? "Database mode" : "Fallback mode"}
+                {summary.storageLabel}
               </span>
             </div>
 
@@ -75,7 +75,7 @@ export default async function ImportPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-[#fff1e5]">
                 {summary.databaseConfigured
-                  ? "AWS database configuration is present. Seeding and CSV imports now write into the persistent backend."
+                  ? `${summary.storageLabel} is configured. Seeding and CSV imports now write into the persistent backend.`
                   : "Add DynamoDB or Aurora configuration to move from fallback mode to persistent AWS-backed data."}
               </p>
             </div>
@@ -237,7 +237,7 @@ export default async function ImportPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="font-semibold text-foreground">{entry.action}</p>
                     <span className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] ${getActivityAccent(entry.action).badge}`}>
-                      {entry.persistenceMode}
+                      {entry.storageLabel}
                     </span>
                   </div>
                   <p className="mt-2 text-sm leading-6 text-muted">{entry.detail}</p>

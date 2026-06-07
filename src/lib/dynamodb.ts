@@ -173,7 +173,7 @@ export async function getDynamoDbImportActivityStore() {
 }
 
 export async function appendImportActivityInDynamoDb(
-  entry: Omit<ImportActivity, "id" | "timestamp">,
+  entry: Omit<ImportActivity, "id" | "timestamp" | "storageLabel">,
 ) {
   const client = getDynamoDbClient();
   const tableName = getTableName();
@@ -185,6 +185,7 @@ export async function appendImportActivityInDynamoDb(
   const activity: ImportActivity = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     timestamp: new Date().toISOString(),
+    storageLabel: entry.persistenceMode === "database" ? "DynamoDB" : "Fallback store",
     ...entry,
   };
 

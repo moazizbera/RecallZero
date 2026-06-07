@@ -33,6 +33,7 @@ import type { DashboardRole } from "@/lib/role-session";
 export type ImportSummary = {
   databaseConfigured: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   incidentCount: number;
   taskCount: number;
   locationCount: number;
@@ -44,6 +45,7 @@ export type ImportActivity = {
   timestamp: string;
   action: string;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   detail: string;
 };
 
@@ -51,11 +53,13 @@ export type CurrentDatasetStatus = {
   label: string;
   detail: string;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
 };
 
 export type SeedDemoResult = {
   ok: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   incidentCount: number;
   message: string;
 };
@@ -65,6 +69,7 @@ export type CsvDataset = "incidents" | "locations" | "tasks";
 export type CsvImportResult = {
   ok: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   importedRows: number;
   message: string;
 };
@@ -72,6 +77,7 @@ export type CsvImportResult = {
 export type GeneratedImportResult = {
   ok: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   parsedCount: number;
   importedCount: number;
   message: string;
@@ -132,6 +138,10 @@ function getPrimaryPersistenceMode(): "database" | "fallback" {
 
 function getPrimaryDatabaseLabel() {
   return hasDynamoDbConfig() ? "DynamoDB" : "PostgreSQL";
+}
+
+function getStorageLabel(persistenceMode: "database" | "fallback") {
+  return persistenceMode === "database" ? getPrimaryDatabaseLabel() : "Fallback store";
 }
 
 function formatTimestamp(date: Date) {
@@ -278,7 +288,9 @@ async function getImportActivityStore() {
   }
 }
 
-async function appendImportActivity(entry: Omit<ImportActivity, "id" | "timestamp">) {
+async function appendImportActivity(
+  entry: Omit<ImportActivity, "id" | "timestamp" | "storageLabel">,
+) {
   if (hasDynamoDbConfig()) {
     await appendImportActivityInDynamoDb(entry);
     return;
@@ -291,6 +303,7 @@ async function appendImportActivity(entry: Omit<ImportActivity, "id" | "timestam
     {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       timestamp: new Date().toISOString(),
+      storageLabel: getStorageLabel(entry.persistenceMode),
       ...entry,
     },
     ...existingEntries,
@@ -324,6 +337,7 @@ export async function getCurrentDatasetStatus(): Promise<CurrentDatasetStatus> {
       label: "Demo baseline",
       detail: `${incidents.length} incident records loaded from the baseline workspace dataset.`,
       persistenceMode: getPrimaryPersistenceMode(),
+      storageLabel: getStorageLabel(getPrimaryPersistenceMode()),
     };
   }
 
@@ -331,6 +345,7 @@ export async function getCurrentDatasetStatus(): Promise<CurrentDatasetStatus> {
     label: latestEntry.action,
     detail: latestEntry.detail,
     persistenceMode: latestEntry.persistenceMode,
+    storageLabel: latestEntry.storageLabel,
   };
 }
 
@@ -542,6 +557,7 @@ export async function getImportSummary(): Promise<ImportSummary> {
   return {
     databaseConfigured: hasPrimaryDatabaseConfig(),
     persistenceMode: getPrimaryPersistenceMode(),
+    storageLabel: getStorageLabel(getPrimaryPersistenceMode()),
     incidentCount: incidents.length,
     taskCount: incidents.reduce((sum, incident) => sum + incident.tasks.length, 0),
     locationCount: incidents.reduce(
@@ -568,6 +584,7 @@ export async function seedDemoData(): Promise<SeedDemoResult> {
     return {
       ok: true,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       incidentCount: incidents.length,
       message:
         "Loaded the demo incidents into the file-backed fallback store for this app workspace.",
@@ -586,6 +603,7 @@ export async function seedDemoData(): Promise<SeedDemoResult> {
     return {
       ok: true,
       persistenceMode: "database",
+      storageLabel: "DynamoDB",
       incidentCount: incidents.length,
       message: `Seeded ${incidents.length} demo incidents into DynamoDB.`,
     };
@@ -595,6 +613,7 @@ export async function seedDemoData(): Promise<SeedDemoResult> {
     return {
       ok: false,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       incidentCount: 0,
       message: "Prisma client could not be initialized.",
     };
@@ -611,6 +630,7 @@ export async function seedDemoData(): Promise<SeedDemoResult> {
   return {
     ok: true,
     persistenceMode: "database",
+    storageLabel: "PostgreSQL",
     incidentCount: incidents.length,
     message: `Seeded ${incidents.length} demo incidents into PostgreSQL.`,
   };
@@ -644,6 +664,7 @@ export async function importGeneratedIncidentsFromSourceCsv(
     return {
       ok: true,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       parsedCount: incidents.length,
       importedCount: incidents.length,
       message: `Generated ${incidents.length} incidents from ${fileName} and loaded them into the file-backed fallback store. Configure DATABASE_URL to persist them to PostgreSQL.`,
@@ -663,6 +684,7 @@ export async function importGeneratedIncidentsFromSourceCsv(
     return {
       ok: true,
       persistenceMode: "database",
+      storageLabel: "DynamoDB",
       parsedCount: incidents.length,
       importedCount: incidents.length,
       message: `Generated and stored ${incidents.length} incidents from ${fileName} in DynamoDB.`,
@@ -681,6 +703,7 @@ export async function importGeneratedIncidentsFromSourceCsv(
   return {
     ok: true,
     persistenceMode: "database",
+    storageLabel: "PostgreSQL",
     parsedCount: incidents.length,
     importedCount: incidents.length,
     message: `Generated and stored ${incidents.length} incidents from ${fileName}.`,
@@ -877,6 +900,7 @@ async function importFallbackCsvDataset(
       return {
         ok: false,
         persistenceMode: "fallback",
+        storageLabel: "Fallback store",
         importedRows: 0,
         message: "No valid incident rows were found. Required columns: incident_id or id, and title.",
       };
@@ -892,6 +916,7 @@ async function importFallbackCsvDataset(
     return {
       ok: true,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       importedRows: importedIncidents.length,
       message: `Imported ${importedIncidents.length} incident rows into the file-backed fallback store.`,
     };
@@ -988,6 +1013,7 @@ async function importFallbackCsvDataset(
     return {
       ok: false,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       importedRows: 0,
       message:
         dataset === "locations"
@@ -1010,6 +1036,7 @@ async function importFallbackCsvDataset(
   return {
     ok: true,
     persistenceMode: "fallback",
+    storageLabel: "Fallback store",
     importedRows,
     message:
       dataset === "locations"
@@ -1033,6 +1060,7 @@ async function importDynamoDbCsvDataset(
       return {
         ok: false,
         persistenceMode: "database",
+        storageLabel: "DynamoDB",
         importedRows: 0,
         message: "No valid incident rows were found. Required columns: incident_id or id, and title.",
       };
@@ -1048,6 +1076,7 @@ async function importDynamoDbCsvDataset(
     return {
       ok: true,
       persistenceMode: "database",
+      storageLabel: "DynamoDB",
       importedRows: importedIncidents.length,
       message: `Imported ${importedIncidents.length} incident rows into DynamoDB.`,
     };
@@ -1144,6 +1173,7 @@ async function importDynamoDbCsvDataset(
     return {
       ok: false,
       persistenceMode: "database",
+      storageLabel: "DynamoDB",
       importedRows: 0,
       message:
         dataset === "locations"
@@ -1165,6 +1195,7 @@ async function importDynamoDbCsvDataset(
   return {
     ok: true,
     persistenceMode: "database",
+    storageLabel: "DynamoDB",
     importedRows,
     message:
       dataset === "locations"
@@ -1183,6 +1214,7 @@ export async function importCsvDataset(
     return {
       ok: false,
       persistenceMode: getPrimaryPersistenceMode(),
+      storageLabel: getStorageLabel(getPrimaryPersistenceMode()),
       importedRows: 0,
       message: "The CSV file did not contain any importable rows.",
     };
@@ -1202,6 +1234,7 @@ export async function importCsvDataset(
     return {
       ok: false,
       persistenceMode: "fallback",
+      storageLabel: "Fallback store",
       importedRows: 0,
       message: "Prisma client could not be initialized.",
     };
@@ -1269,6 +1302,7 @@ export async function importCsvDataset(
     const result: CsvImportResult = {
       ok: importedRows > 0,
       persistenceMode: "database",
+      storageLabel: "PostgreSQL",
       importedRows,
       message:
         importedRows > 0
@@ -1334,6 +1368,7 @@ export async function importCsvDataset(
     const result: CsvImportResult = {
       ok: importedRows > 0,
       persistenceMode: "database",
+      storageLabel: "PostgreSQL",
       importedRows,
       message:
         importedRows > 0
@@ -1398,6 +1433,7 @@ export async function importCsvDataset(
   const result: CsvImportResult = {
     ok: importedRows > 0,
     persistenceMode: "database",
+    storageLabel: "PostgreSQL",
     importedRows,
     message:
       importedRows > 0

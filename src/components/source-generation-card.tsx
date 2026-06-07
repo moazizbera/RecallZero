@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 type SourceImportResponse = {
   ok: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   parsedCount: number;
   importedCount: number;
   message: string;

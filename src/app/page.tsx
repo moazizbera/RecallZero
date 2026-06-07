@@ -29,7 +29,7 @@ export default async function Home() {
   const activity = await getImportActivity();
   const latestActivity = activity[0] ?? null;
   const recentActivity = activity.slice(0, 2);
-  const judgeSummary = `RecallZero is running in ${currentDataset.persistenceMode} mode with dataset state '${currentDataset.label}'. There are ${snapshot.incidents.length} active incidents, ${snapshot.kpis[1]?.value ?? "0"} affected orders, and ${snapshot.kpis[2]?.value ?? "$0"} revenue at risk. The latest operator activity is ${latestActivity ? `${latestActivity.action} at ${formatActivityTimestamp(latestActivity.timestamp)}` : "not yet recorded"}.`;
+  const judgeSummary = `RecallZero is running on ${currentDataset.storageLabel} with dataset state '${currentDataset.label}'. There are ${snapshot.incidents.length} active incidents, ${snapshot.kpis[1]?.value ?? "0"} affected orders, and ${snapshot.kpis[2]?.value ?? "$0"} revenue at risk. The latest operator activity is ${latestActivity ? `${latestActivity.action} at ${formatActivityTimestamp(latestActivity.timestamp)}` : "not yet recorded"}.`;
   const demoSequence = [
     {
       title: "1. Frame the risk",
@@ -64,7 +64,7 @@ export default async function Home() {
     },
     {
       label: "Proof",
-      detail: `Live incidents, ${snapshot.kpis[1]?.value ?? "0"} affected orders, and ${currentDataset.persistenceMode} persistence are already running here.`,
+      detail: `Live incidents, ${snapshot.kpis[1]?.value ?? "0"} affected orders, and ${currentDataset.storageLabel} persistence are already running here.`,
     },
   ];
 
@@ -131,7 +131,7 @@ export default async function Home() {
                   Current dataset
                 </p>
                 <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70">
-                  {currentDataset.persistenceMode}
+                  {currentDataset.storageLabel}
                 </span>
               </div>
               <p className="mt-3 text-sm font-semibold text-white/90">

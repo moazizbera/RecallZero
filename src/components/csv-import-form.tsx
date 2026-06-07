@@ -8,6 +8,7 @@ type CsvDataset = "incidents" | "locations" | "tasks";
 type CsvImportResponse = {
   ok: boolean;
   persistenceMode: "database" | "fallback";
+  storageLabel: string;
   importedRows: number;
   message: string;
 };
