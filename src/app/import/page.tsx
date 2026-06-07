@@ -4,11 +4,16 @@ import { CsvImportForm } from "@/components/csv-import-form";
 import { ImportSeedButton } from "@/components/import-seed-button";
 import { SourceGenerationCard } from "@/components/source-generation-card";
 import { formatActivityTimestamp, getActivityAccent } from "@/lib/activity-log";
-import { getImportActivity, getImportSummary } from "@/lib/recall-repository";
+import {
+  getBackendReadiness,
+  getImportActivity,
+  getImportSummary,
+} from "@/lib/recall-repository";
 
 export default async function ImportPage() {
   const summary = await getImportSummary();
   const activity = await getImportActivity();
+  const readiness = getBackendReadiness();
   const activityPreview = activity.slice(0, 4);
   const importScrollAreaClass = "content-scroll";
 
@@ -133,6 +138,78 @@ export default async function ImportPage() {
                 <p className="text-sm leading-6 text-muted">{step}</p>
               </div>
             ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <article className="panel-shell panel-shell-surface">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-accent">
+            Backend proof
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+            Screenshot-ready readiness status
+          </h2>
+          <div className={`mt-6 space-y-4 ${importScrollAreaClass}`}>
+            <div className="rounded-[1.3rem] border border-line bg-white/70 px-4 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="font-semibold text-foreground">Active backend</p>
+                <span className="rounded-full border border-line bg-surface px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                  {readiness.storageLabel}
+                </span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                {readiness.databaseConfigured
+                  ? "The app is currently wired to an AWS-backed database path."
+                  : "The app is still in fallback mode until one AWS database path is configured."}
+              </p>
+            </div>
+
+            {readiness.checks.map((check) => (
+              <div
+                key={check.label}
+                className="rounded-[1.3rem] border border-line bg-white/70 px-4 py-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-semibold text-foreground">{check.label}</p>
+                  <span
+                    className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] ${
+                      check.status === "ready"
+                        ? "border-[#b8dfc8] bg-[#e9f7ef] text-[#1f6b45]"
+                        : "border-[#f0c5ae] bg-[#fbefe8] text-accent"
+                    }`}
+                  >
+                    {check.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-muted">{check.detail}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="panel-shell panel-shell-muted">
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-accent">
+            Judge artifact
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
+            API proof endpoint
+          </h2>
+          <div className={`mt-6 space-y-4 ${importScrollAreaClass}`}>
+            <div className="rounded-[1.3rem] border border-line bg-surface px-4 py-4 text-sm leading-6 text-muted">
+              Use <span className="font-mono text-foreground">/api/system/readiness</span> as a clean screenshot or browser proof of the configured backend state.
+            </div>
+            <div className="rounded-[1.3rem] border border-line bg-surface px-4 py-4 text-sm leading-6 text-muted">
+              It returns the active storage label, whether an AWS database path is configured, and the environment readiness checks judges care about.
+            </div>
+            <a
+              href="/api/system/readiness"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center text-sm font-semibold text-accent underline decoration-transparent hover:decoration-current"
+            >
+              Open readiness endpoint
+            </a>
           </div>
         </article>
       </section>

@@ -109,6 +109,18 @@ export type RoleBrief = {
   priorities: string[];
 };
 
+export type BackendReadiness = {
+  storageLabel: string;
+  persistenceMode: "database" | "fallback";
+  databaseConfigured: boolean;
+  recommendedPath: "DynamoDB" | "PostgreSQL";
+  checks: Array<{
+    label: string;
+    status: "ready" | "missing";
+    detail: string;
+  }>;
+};
+
 type IncidentRecord = Incident & {
   metrics: PrismaIncidentMetric[];
   locations: PrismaImpactLocation[];
@@ -142,6 +154,43 @@ function getPrimaryDatabaseLabel() {
 
 function getStorageLabel(persistenceMode: "database" | "fallback") {
   return persistenceMode === "database" ? getPrimaryDatabaseLabel() : "Fallback store";
+}
+
+export function getBackendReadiness(): BackendReadiness {
+  const dynamoRegionConfigured = Boolean(process.env.AWS_REGION);
+  const dynamoTableConfigured = Boolean(process.env.DYNAMODB_TABLE_NAME);
+  const postgresConfigured = hasPrismaDatabaseUrl();
+  const persistenceMode = getPrimaryPersistenceMode();
+
+  return {
+    storageLabel: getStorageLabel(persistenceMode),
+    persistenceMode,
+    databaseConfigured: hasPrimaryDatabaseConfig(),
+    recommendedPath: "DynamoDB",
+    checks: [
+      {
+        label: "AWS_REGION",
+        status: dynamoRegionConfigured ? "ready" : "missing",
+        detail: dynamoRegionConfigured
+          ? "AWS region is configured for DynamoDB access."
+          : "Required for DynamoDB table access and bootstrap.",
+      },
+      {
+        label: "DYNAMODB_TABLE_NAME",
+        status: dynamoTableConfigured ? "ready" : "missing",
+        detail: dynamoTableConfigured
+          ? "DynamoDB table name is configured."
+          : "Required for the primary AWS-backed demo path.",
+      },
+      {
+        label: "DATABASE_URL",
+        status: postgresConfigured ? "ready" : "missing",
+        detail: postgresConfigured
+          ? "PostgreSQL or Aurora connection string is configured."
+          : "Optional alternate AWS database path through Prisma.",
+      },
+    ],
+  };
 }
 
 function formatTimestamp(date: Date) {
