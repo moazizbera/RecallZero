@@ -68,6 +68,12 @@ export default async function ImportPage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <ImportSeedButton />
               <Link
+                href="/judge"
+                className="inline-flex items-center justify-center rounded-full border border-line bg-accent px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+              >
+                Open judge mode
+              </Link>
+              <Link
                 href="/"
                 className="inline-flex items-center justify-center rounded-full border border-line bg-white/70 px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-strong"
               >

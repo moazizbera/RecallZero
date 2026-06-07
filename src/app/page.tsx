@@ -191,6 +191,12 @@ export default async function Home() {
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3">
+                  <Link
+                    href="/judge"
+                    className="inline-flex items-center justify-center rounded-full border border-line bg-white/80 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-surface"
+                  >
+                    Open judge mode
+                  </Link>
                   <div className="rounded-full border border-line bg-white/80 px-4 py-2">
                     <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
                       Active dataset
