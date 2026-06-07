@@ -63,6 +63,14 @@ Use one of these AWS-backed options:
 - DynamoDB: set `AWS_REGION` and `DYNAMODB_TABLE_NAME`
 - Aurora PostgreSQL: set `DATABASE_URL` and run the Prisma schema push
 
+For DynamoDB, bootstrap the table with:
+
+```bash
+npm run aws:dynamodb:init
+```
+
+The script creates a PAY_PER_REQUEST table with `pk` as the partition key and `sk` as the sort key.
+
 For Aurora PostgreSQL, run:
 
 ```bash

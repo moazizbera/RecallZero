@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "aws:dynamodb:init": "node ./scripts/init-dynamodb.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
