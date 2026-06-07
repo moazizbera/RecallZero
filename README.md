@@ -2,6 +2,8 @@
 
 RecallZero is a recall-response operating system for consumer brands and distributors. It turns one supplier quality alert into a traceable operational workflow across inventory, warehouses, stores, customer orders, task coordination, and compliance evidence.
 
+Hackathon position: RecallZero is a B2B submission, and the recommended submitted AWS database path is DynamoDB because it provides the fastest judge-verifiable production proof. Aurora PostgreSQL remains the alternate relational path.
+
 The app is built for the H0: Hack the Zero Stack with Vercel v0 and AWS Databases hackathon. It runs in two modes:
 
 - Fallback mode: file-backed demo data for local walkthroughs without infrastructure
@@ -96,6 +98,12 @@ npm run build
 3. Open the import center and load a source or CSV dataset.
 4. Return to the dashboard to show the dataset badge, recent activity, and changed incident state.
 5. Open an incident war room and finish on traceability, task orchestration, and audit evidence.
+
+## Submission Reminders
+
+1. Request AWS and v0 credits from the hackathon Resources tab while supplies last.
+2. Save a Devpost draft early and keep updating it throughout the build.
+3. In the demo video, explain why DynamoDB was chosen for the submitted build.
 
 ## Submission Notes
 
