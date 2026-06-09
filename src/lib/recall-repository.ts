@@ -12,6 +12,7 @@ import type {
 
 import {
   appendImportActivityInDynamoDb,
+  canResolveDynamoDbCredentials,
   getDynamoDbImportActivityStore,
   getDynamoDbIncidentById,
   getDynamoDbIncidentStore,
@@ -156,16 +157,25 @@ function getStorageLabel(persistenceMode: "database" | "fallback") {
   return persistenceMode === "database" ? getPrimaryDatabaseLabel() : "Fallback store";
 }
 
-export function getBackendReadiness(): BackendReadiness {
+export async function getBackendReadiness(): Promise<BackendReadiness> {
   const dynamoRegionConfigured = Boolean(process.env.AWS_REGION);
   const dynamoTableConfigured = Boolean(process.env.DYNAMODB_TABLE_NAME);
+  const dynamoConfigured = dynamoRegionConfigured && dynamoTableConfigured;
+  const dynamoCredentialsReady = dynamoConfigured
+    ? await canResolveDynamoDbCredentials()
+    : false;
   const postgresConfigured = hasPrismaDatabaseUrl();
-  const persistenceMode = getPrimaryPersistenceMode();
+  const persistenceMode = dynamoCredentialsReady || postgresConfigured ? "database" : "fallback";
+  const storageLabel = dynamoCredentialsReady
+    ? "DynamoDB"
+    : postgresConfigured
+      ? "PostgreSQL"
+      : "Fallback store";
 
   return {
-    storageLabel: getStorageLabel(persistenceMode),
+    storageLabel,
     persistenceMode,
-    databaseConfigured: hasPrimaryDatabaseConfig(),
+    databaseConfigured: persistenceMode === "database",
     recommendedPath: "DynamoDB",
     checks: [
       {
@@ -181,6 +191,15 @@ export function getBackendReadiness(): BackendReadiness {
         detail: dynamoTableConfigured
           ? "DynamoDB table name is configured."
           : "Required for the primary AWS-backed demo path.",
+      },
+      {
+        label: "AWS credentials or runtime role",
+        status: dynamoCredentialsReady ? "ready" : "missing",
+        detail: dynamoConfigured
+          ? dynamoCredentialsReady
+            ? "The AWS SDK resolved credentials for DynamoDB access."
+            : "DynamoDB env vars are present, but the AWS SDK could not resolve credentials yet."
+          : "Not required until the DynamoDB path is selected.",
       },
       {
         label: "DATABASE_URL",
@@ -341,8 +360,12 @@ async function appendImportActivity(
   entry: Omit<ImportActivity, "id" | "timestamp" | "storageLabel">,
 ) {
   if (hasDynamoDbConfig()) {
-    await appendImportActivityInDynamoDb(entry);
-    return;
+    try {
+      await appendImportActivityInDynamoDb(entry);
+      return;
+    } catch (error) {
+      console.error("Failed to append DynamoDB import activity, using fallback store.", error);
+    }
   }
 
   await mkdir(path.dirname(importActivityFilePath), { recursive: true });
@@ -382,11 +405,13 @@ export async function getCurrentDatasetStatus(): Promise<CurrentDatasetStatus> {
   const latestEntry = activity.find((entry) => entry.action !== "Role switch");
 
   if (!latestEntry) {
+    const readiness = await getBackendReadiness();
+
     return {
       label: "Demo baseline",
       detail: `${incidents.length} incident records loaded from the baseline workspace dataset.`,
-      persistenceMode: getPrimaryPersistenceMode(),
-      storageLabel: getStorageLabel(getPrimaryPersistenceMode()),
+      persistenceMode: readiness.persistenceMode,
+      storageLabel: readiness.storageLabel,
     };
   }
 
@@ -602,11 +627,12 @@ async function replaceIncidentsInDatabase(incidents: RecallIncident[]) {
 
 export async function getImportSummary(): Promise<ImportSummary> {
   const incidents = await getIncidents();
+  const readiness = await getBackendReadiness();
 
   return {
-    databaseConfigured: hasPrimaryDatabaseConfig(),
-    persistenceMode: getPrimaryPersistenceMode(),
-    storageLabel: getStorageLabel(getPrimaryPersistenceMode()),
+    databaseConfigured: readiness.databaseConfigured,
+    persistenceMode: readiness.persistenceMode,
+    storageLabel: readiness.storageLabel,
     incidentCount: incidents.length,
     taskCount: incidents.reduce((sum, incident) => sum + incident.tasks.length, 0),
     locationCount: incidents.reduce(
@@ -642,20 +668,40 @@ export async function seedDemoData(): Promise<SeedDemoResult> {
 
   if (hasDynamoDbConfig()) {
     const incidents = getFallbackIncidents();
-    await replaceIncidentsInDynamoDb(incidents);
-    await appendImportActivity({
-      action: "Demo seed",
-      persistenceMode: "database",
-      detail: `Seeded ${incidents.length} demo incidents into DynamoDB.`,
-    });
 
-    return {
-      ok: true,
-      persistenceMode: "database",
-      storageLabel: "DynamoDB",
-      incidentCount: incidents.length,
-      message: `Seeded ${incidents.length} demo incidents into DynamoDB.`,
-    };
+    try {
+      await replaceIncidentsInDynamoDb(incidents);
+      await appendImportActivity({
+        action: "Demo seed",
+        persistenceMode: "database",
+        detail: `Seeded ${incidents.length} demo incidents into DynamoDB.`,
+      });
+
+      return {
+        ok: true,
+        persistenceMode: "database",
+        storageLabel: "DynamoDB",
+        incidentCount: incidents.length,
+        message: `Seeded ${incidents.length} demo incidents into DynamoDB.`,
+      };
+    } catch (error) {
+      console.error("Failed to seed DynamoDB demo data, using fallback store.", error);
+      await replaceFallbackIncidents(incidents);
+      await appendImportActivity({
+        action: "Demo reset",
+        persistenceMode: "fallback",
+        detail: `DynamoDB was unavailable, so the fallback store was reset to ${incidents.length} demo incidents.`,
+      });
+
+      return {
+        ok: true,
+        persistenceMode: "fallback",
+        storageLabel: "Fallback store",
+        incidentCount: incidents.length,
+        message:
+          "DynamoDB was unavailable, so the demo incidents were loaded into the file-backed fallback store.",
+      };
+    }
   }
 
   if (!getPrismaClient()) {
@@ -716,30 +762,51 @@ export async function importGeneratedIncidentsFromSourceCsv(
       storageLabel: "Fallback store",
       parsedCount: incidents.length,
       importedCount: incidents.length,
-      message: `Generated ${incidents.length} incidents from ${fileName} and loaded them into the file-backed fallback store. Configure DATABASE_URL to persist them to PostgreSQL.`,
+      message: `Generated ${incidents.length} incidents from ${fileName} and loaded them into the file-backed fallback store. Configure DynamoDB or DATABASE_URL to persist them to an AWS-backed database.`,
       fileName,
       previewIncidents,
     };
   }
 
   if (hasDynamoDbConfig()) {
-    await replaceIncidentsInDynamoDb(incidents);
-    await appendImportActivity({
-      action: "Source import",
-      persistenceMode: "database",
-      detail: `Generated and stored ${incidents.length} incidents from ${fileName} in DynamoDB.`,
-    });
+    try {
+      await replaceIncidentsInDynamoDb(incidents);
+      await appendImportActivity({
+        action: "Source import",
+        persistenceMode: "database",
+        detail: `Generated and stored ${incidents.length} incidents from ${fileName} in DynamoDB.`,
+      });
 
-    return {
-      ok: true,
-      persistenceMode: "database",
-      storageLabel: "DynamoDB",
-      parsedCount: incidents.length,
-      importedCount: incidents.length,
-      message: `Generated and stored ${incidents.length} incidents from ${fileName} in DynamoDB.`,
-      fileName,
-      previewIncidents,
-    };
+      return {
+        ok: true,
+        persistenceMode: "database",
+        storageLabel: "DynamoDB",
+        parsedCount: incidents.length,
+        importedCount: incidents.length,
+        message: `Generated and stored ${incidents.length} incidents from ${fileName} in DynamoDB.`,
+        fileName,
+        previewIncidents,
+      };
+    } catch (error) {
+      console.error("Failed to store source import in DynamoDB, using fallback store.", error);
+      await replaceFallbackIncidents(incidents);
+      await appendImportActivity({
+        action: "Source import",
+        persistenceMode: "fallback",
+        detail: `DynamoDB was unavailable, so ${incidents.length} generated incidents from ${fileName} were loaded into the fallback store.`,
+      });
+
+      return {
+        ok: true,
+        persistenceMode: "fallback",
+        storageLabel: "Fallback store",
+        parsedCount: incidents.length,
+        importedCount: incidents.length,
+        message: `DynamoDB was unavailable, so ${incidents.length} generated incidents from ${fileName} were loaded into the file-backed fallback store.`,
+        fileName,
+        previewIncidents,
+      };
+    }
   }
 
   await replaceIncidentsInDatabase(incidents);
@@ -1274,7 +1341,12 @@ export async function importCsvDataset(
   }
 
   if (hasDynamoDbConfig()) {
-    return importDynamoDbCsvDataset(dataset, rows);
+    try {
+      return await importDynamoDbCsvDataset(dataset, rows);
+    } catch (error) {
+      console.error("Failed to import CSV dataset into DynamoDB, using fallback store.", error);
+      return importFallbackCsvDataset(dataset, rows);
+    }
   }
 
   const prisma = getPrismaClient();

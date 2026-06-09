@@ -13,7 +13,7 @@ export default async function JudgePage() {
   const [snapshot, currentDataset, readiness, activity] = await Promise.all([
     getDashboardSnapshot(),
     getCurrentDatasetStatus(),
-    Promise.resolve(getBackendReadiness()),
+    getBackendReadiness(),
     getImportActivity(),
   ]);
   const featuredIncident = snapshot.incidents[0];

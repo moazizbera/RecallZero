@@ -114,7 +114,7 @@
       }
     ],
     "architecture": [
-      "Aurora PostgreSQL stores the supplier-lot-to-order graph with auditable relational joins.",
+      "DynamoDB stores incident, activity, and response state for the submitted AWS-backed build with low-latency access.",
       "Vercel-hosted Next.js surfaces incident state through server-rendered dashboards and route handlers.",
       "Async workers compute blast radius, queue notifications, and keep incident metrics updated."
     ]

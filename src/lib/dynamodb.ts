@@ -54,6 +54,26 @@ export function getDynamoDbClient() {
   return globalForDynamo.dynamo;
 }
 
+export async function canResolveDynamoDbCredentials() {
+  if (!hasDynamoDbConfig()) {
+    return false;
+  }
+
+  const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+  const credentialsProvider = client.config.credentials;
+
+  if (!credentialsProvider) {
+    return false;
+  }
+
+  try {
+    const credentials = await credentialsProvider();
+    return Boolean(credentials?.accessKeyId && credentials?.secretAccessKey);
+  } catch {
+    return false;
+  }
+}
+
 function chunkArray<T>(items: T[], chunkSize: number) {
   const chunks: T[][] = [];
 

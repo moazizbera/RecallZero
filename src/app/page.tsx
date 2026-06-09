@@ -657,7 +657,7 @@ export default async function Home() {
                 Backend posture
               </p>
               <h3 className="mt-3 text-3xl font-semibold tracking-[-0.04em]">
-                Strong backend, clear path to Aurora.
+                Strong backend, clear AWS deployment path.
               </h3>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {featuredIncident.architecture.slice(0, 3).map((principle) => (

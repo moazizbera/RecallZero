@@ -13,7 +13,7 @@ import {
 export default async function ImportPage() {
   const summary = await getImportSummary();
   const activity = await getImportActivity();
-  const readiness = getBackendReadiness();
+  const readiness = await getBackendReadiness();
   const activityPreview = activity.slice(0, 4);
   const importScrollAreaClass = "content-scroll";
   const proofAssets = [
