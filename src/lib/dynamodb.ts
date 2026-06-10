@@ -1,4 +1,4 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   BatchWriteCommand,
   DynamoDBDocumentClient,
@@ -69,6 +69,27 @@ export async function canResolveDynamoDbCredentials() {
   try {
     const credentials = await credentialsProvider();
     return Boolean(credentials?.accessKeyId && credentials?.secretAccessKey);
+  } catch {
+    return false;
+  }
+}
+
+export async function canAccessDynamoDbTable() {
+  if (!hasDynamoDbConfig()) {
+    return false;
+  }
+
+  const tableName = getTableName();
+
+  if (!tableName) {
+    return false;
+  }
+
+  const client = new DynamoDBClient({ region: process.env.AWS_REGION });
+
+  try {
+    await client.send(new DescribeTableCommand({ TableName: tableName }));
+    return true;
   } catch {
     return false;
   }

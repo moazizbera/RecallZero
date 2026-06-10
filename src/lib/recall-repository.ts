@@ -12,6 +12,7 @@ import type {
 
 import {
   appendImportActivityInDynamoDb,
+  canAccessDynamoDbTable,
   canResolveDynamoDbCredentials,
   getDynamoDbImportActivityStore,
   getDynamoDbIncidentById,
@@ -164,9 +165,10 @@ export async function getBackendReadiness(): Promise<BackendReadiness> {
   const dynamoCredentialsReady = dynamoConfigured
     ? await canResolveDynamoDbCredentials()
     : false;
+  const dynamoTableReady = dynamoCredentialsReady ? await canAccessDynamoDbTable() : false;
   const postgresConfigured = hasPrismaDatabaseUrl();
-  const persistenceMode = dynamoCredentialsReady || postgresConfigured ? "database" : "fallback";
-  const storageLabel = dynamoCredentialsReady
+  const persistenceMode = dynamoTableReady || postgresConfigured ? "database" : "fallback";
+  const storageLabel = dynamoTableReady
     ? "DynamoDB"
     : postgresConfigured
       ? "PostgreSQL"
@@ -200,6 +202,15 @@ export async function getBackendReadiness(): Promise<BackendReadiness> {
             ? "The AWS SDK resolved credentials for DynamoDB access."
             : "DynamoDB env vars are present, but the AWS SDK could not resolve credentials yet."
           : "Not required until the DynamoDB path is selected.",
+      },
+      {
+        label: "DynamoDB table access",
+        status: dynamoTableReady ? "ready" : "missing",
+        detail: dynamoCredentialsReady
+          ? dynamoTableReady
+            ? "The configured DynamoDB table is reachable."
+            : "Credentials resolved, but the configured DynamoDB table could not be described yet."
+          : "Blocked until AWS credentials or a runtime role are available.",
       },
       {
         label: "DATABASE_URL",
