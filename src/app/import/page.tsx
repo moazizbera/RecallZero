@@ -16,6 +16,35 @@ export default async function ImportPage() {
   const readiness = await getBackendReadiness();
   const activityPreview = activity.slice(0, 4);
   const importScrollAreaClass = "content-scroll";
+  const missingReadinessChecks = readiness.checks.filter((check) => check.status === "missing");
+  const credentialsCheck = readiness.checks.find(
+    (check) => check.label === "AWS credentials or runtime role",
+  );
+  const tableAccessCheck = readiness.checks.find(
+    (check) => check.label === "DynamoDB table access",
+  );
+  const readinessHeadline = readiness.databaseConfigured
+    ? `${readiness.storageLabel} is reachable. Seeding and CSV imports now write into the persistent backend.`
+    : credentialsCheck?.status === "missing" &&
+        readiness.checks.some((check) => check.label === "AWS_REGION" && check.status === "ready") &&
+        readiness.checks.some(
+          (check) => check.label === "DYNAMODB_TABLE_NAME" && check.status === "ready",
+        )
+      ? "DynamoDB env vars are present, but AWS credentials or a runtime role are still missing."
+      : tableAccessCheck?.status === "missing" && credentialsCheck?.status === "ready"
+        ? "AWS credentials resolved, but the configured DynamoDB table is not reachable yet."
+        : "Add DynamoDB or Aurora configuration to move from fallback mode to persistent AWS-backed data.";
+  const readinessNextStep = readiness.databaseConfigured
+    ? "Run one demo reset, then capture the readiness card and JSON endpoint as proof."
+    : credentialsCheck?.status === "missing" &&
+        readiness.checks.some((check) => check.label === "AWS_REGION" && check.status === "ready") &&
+        readiness.checks.some(
+          (check) => check.label === "DYNAMODB_TABLE_NAME" && check.status === "ready",
+        )
+      ? "Next step: provide AWS credentials locally and in Vercel, or attach an AWS runtime role, then re-run the demo seed."
+      : tableAccessCheck?.status === "missing" && credentialsCheck?.status === "ready"
+        ? "Next step: create or fix access to the configured DynamoDB table, then re-run the demo seed."
+        : `Next step: resolve ${missingReadinessChecks.map((check) => check.label).join(", ")} and then seed the demo dataset.`;
   const proofAssets = [
     {
       title: "Dashboard hero",
@@ -31,7 +60,7 @@ export default async function ImportPage() {
     },
     {
       title: "Backend proof",
-      detail: "Capture the JSON readiness endpoint or the import-page readiness card after AWS env vars are configured.",
+      detail: "Capture the readiness JSON endpoint or this page after the required checks turn ready.",
       href: "/api/system/readiness",
       hrefLabel: "Open readiness endpoint",
     },
@@ -111,9 +140,10 @@ export default async function ImportPage() {
                 Environment requirement
               </p>
               <p className="mt-3 text-sm leading-6 text-[#fff1e5]">
-                {summary.databaseConfigured
-                  ? `${summary.storageLabel} is configured. Seeding and CSV imports now write into the persistent backend.`
-                  : "Add DynamoDB or Aurora configuration to move from fallback mode to persistent AWS-backed data."}
+                {readinessHeadline}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[#ffd9c4]">
+                {readinessNextStep}
               </p>
             </div>
           </div>
@@ -157,6 +187,7 @@ export default async function ImportPage() {
             {[
               "Pick one primary AWS backend: DynamoDB for fastest proof or Aurora PostgreSQL for the relational path.",
               "Set DYNAMODB_TABLE_NAME plus AWS_REGION, or set DATABASE_URL locally and in Vercel.",
+              "If you use DynamoDB, also provide AWS credentials or an AWS runtime role and confirm the table is reachable.",
               "If you choose Aurora, run prisma db push to provision the schema.",
               "Return here and seed the demo dataset.",
             ].map((step, index) => (
@@ -192,8 +223,8 @@ export default async function ImportPage() {
               </div>
               <p className="mt-2 text-sm leading-6 text-muted">
                 {readiness.databaseConfigured
-                  ? "The app is currently wired to an AWS-backed database path."
-                  : "The app is still in fallback mode until one AWS database path is configured."}
+                  ? "The app is currently wired to a reachable AWS-backed database path."
+                  : "The app is still in fallback mode until one AWS database path is both configured and reachable."}
               </p>
             </div>
 
