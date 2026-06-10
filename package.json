@@ -6,6 +6,7 @@
     "aws:dynamodb:init": "node ./scripts/init-dynamodb.cjs",
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
