@@ -11,9 +11,20 @@ import type { RecallIncident } from "@/lib/recall-data";
 
 const globalForDynamo = globalThis as unknown as {
   dynamo?: DynamoDBDocumentClient;
+  dynamoReadiness?: {
+    checkedAt: number;
+    credentialsReady: boolean;
+    tableReady: boolean;
+  };
+  dynamoReadinessPromise?: Promise<{
+    checkedAt: number;
+    credentialsReady: boolean;
+    tableReady: boolean;
+  }>;
 };
 
 const appPartitionKey = "RECALLZERO";
+const dynamoReadinessTtlMs = 30_000;
 
 type IncidentItem = {
   pk: string;
@@ -95,6 +106,42 @@ export async function canAccessDynamoDbTable() {
   }
 }
 
+export async function getDynamoDbReadiness() {
+  if (!hasDynamoDbConfig()) {
+    return {
+      checkedAt: Date.now(),
+      credentialsReady: false,
+      tableReady: false,
+    };
+  }
+
+  const cachedReadiness = globalForDynamo.dynamoReadiness;
+
+  if (cachedReadiness && Date.now() - cachedReadiness.checkedAt < dynamoReadinessTtlMs) {
+    return cachedReadiness;
+  }
+
+  if (!globalForDynamo.dynamoReadinessPromise) {
+    globalForDynamo.dynamoReadinessPromise = (async () => {
+      const credentialsReady = await canResolveDynamoDbCredentials();
+      const tableReady = credentialsReady ? await canAccessDynamoDbTable() : false;
+
+      const readiness = {
+        checkedAt: Date.now(),
+        credentialsReady,
+        tableReady,
+      };
+
+      globalForDynamo.dynamoReadiness = readiness;
+      return readiness;
+    })().finally(() => {
+      globalForDynamo.dynamoReadinessPromise = undefined;
+    });
+  }
+
+  return globalForDynamo.dynamoReadinessPromise;
+}
+
 function chunkArray<T>(items: T[], chunkSize: number) {
   const chunks: T[][] = [];
 
@@ -106,6 +153,12 @@ function chunkArray<T>(items: T[], chunkSize: number) {
 }
 
 export async function getDynamoDbIncidentStore() {
+  const readiness = await getDynamoDbReadiness();
+
+  if (!readiness.tableReady) {
+    return null;
+  }
+
   const client = getDynamoDbClient();
   const tableName = getTableName();
 
@@ -130,6 +183,12 @@ export async function getDynamoDbIncidentStore() {
 }
 
 export async function getDynamoDbIncidentById(incidentId: string) {
+  const readiness = await getDynamoDbReadiness();
+
+  if (!readiness.tableReady) {
+    return null;
+  }
+
   const client = getDynamoDbClient();
   const tableName = getTableName();
 
@@ -151,6 +210,12 @@ export async function getDynamoDbIncidentById(incidentId: string) {
 }
 
 export async function replaceIncidentsInDynamoDb(incidents: RecallIncident[]) {
+  const readiness = await getDynamoDbReadiness();
+
+  if (!readiness.tableReady) {
+    throw new Error("DynamoDB is not reachable.");
+  }
+
   const client = getDynamoDbClient();
   const tableName = getTableName();
 
@@ -190,6 +255,12 @@ export async function replaceIncidentsInDynamoDb(incidents: RecallIncident[]) {
 }
 
 export async function getDynamoDbImportActivityStore() {
+  const readiness = await getDynamoDbReadiness();
+
+  if (!readiness.tableReady) {
+    return null;
+  }
+
   const client = getDynamoDbClient();
   const tableName = getTableName();
 
@@ -216,6 +287,12 @@ export async function getDynamoDbImportActivityStore() {
 export async function appendImportActivityInDynamoDb(
   entry: Omit<ImportActivity, "id" | "timestamp" | "storageLabel">,
 ) {
+  const readiness = await getDynamoDbReadiness();
+
+  if (!readiness.tableReady) {
+    throw new Error("DynamoDB is not reachable.");
+  }
+
   const client = getDynamoDbClient();
   const tableName = getTableName();
 
