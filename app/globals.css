@@ -1,0 +1,295 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Aptos', 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Cascadia Code', 'SFMono-Regular', 'Consolas', monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: dark;
+  /* Command-center dark slate with amber alert accent (RecallZero) */
+  --background: oklch(0.16 0.012 248);
+  --foreground: oklch(0.95 0.005 250);
+  --card: oklch(0.205 0.014 250);
+  --card-foreground: oklch(0.95 0.005 250);
+  --popover: oklch(0.205 0.014 250);
+  --popover-foreground: oklch(0.95 0.005 250);
+  --primary: oklch(0.78 0.16 75);
+  --primary-foreground: oklch(0.2 0.03 70);
+  --secondary: oklch(0.27 0.016 250);
+  --secondary-foreground: oklch(0.95 0.005 250);
+  --muted: oklch(0.24 0.014 250);
+  --muted-foreground: oklch(0.68 0.012 250);
+  --accent: oklch(0.3 0.018 250);
+  --accent-foreground: oklch(0.95 0.005 250);
+  --destructive: oklch(0.62 0.21 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+  --success: oklch(0.7 0.15 158);
+  --success-foreground: oklch(0.18 0.02 158);
+  --warning: oklch(0.8 0.15 80);
+  --warning-foreground: oklch(0.2 0.03 80);
+  --border: oklch(0.3 0.014 250);
+  --input: oklch(0.3 0.014 250);
+  --ring: oklch(0.78 0.16 75);
+  --chart-1: oklch(0.78 0.16 75);
+  --chart-2: oklch(0.7 0.15 158);
+  --chart-3: oklch(0.62 0.21 25);
+  --chart-4: oklch(0.6 0.05 250);
+  --chart-5: oklch(0.45 0.03 250);
+  --radius: 0.5rem;
+  --sidebar: oklch(0.185 0.013 250);
+  --sidebar-foreground: oklch(0.95 0.005 250);
+  --sidebar-primary: oklch(0.78 0.16 75);
+  --sidebar-primary-foreground: oklch(0.2 0.03 70);
+  --sidebar-accent: oklch(0.27 0.016 250);
+  --sidebar-accent-foreground: oklch(0.95 0.005 250);
+  --sidebar-border: oklch(0.3 0.014 250);
+  --sidebar-ring: oklch(0.78 0.16 75);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@keyframes recallzero-load {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.recall-panorama {
+  background:
+    radial-gradient(circle at 18% 28%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 24%),
+    radial-gradient(circle at 82% 36%, color-mix(in oklab, var(--success) 16%, transparent), transparent 26%),
+    linear-gradient(115deg, color-mix(in oklab, var(--background) 74%, black), var(--background) 48%, color-mix(in oklab, var(--background) 86%, var(--primary)));
+  animation: recallzero-pan 16s ease-in-out infinite alternate;
+}
+
+.recall-scanline {
+  animation: recallzero-scan 4.2s ease-in-out infinite;
+  box-shadow: 0 0 42px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.recall-orbit {
+  animation: recallzero-orbit 14s linear infinite;
+  box-shadow: inset 0 0 42px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+
+.recall-node {
+  animation: recallzero-float 4.8s ease-in-out infinite;
+}
+
+.recall-flow {
+  fill: none;
+  stroke: color-mix(in oklab, var(--primary) 62%, transparent);
+  stroke-width: 0.28;
+  stroke-dasharray: 6 8;
+  animation: recallzero-flow 2.8s linear infinite;
+  filter: drop-shadow(0 0 8px color-mix(in oklab, var(--primary) 30%, transparent));
+}
+
+.recall-reveal {
+  animation: recallzero-reveal 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.recall-feature-card,
+.recall-glass-panel {
+  animation: recallzero-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.22);
+}
+
+.recall-feature-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.recall-feature-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%);
+  background: linear-gradient(110deg, transparent, color-mix(in oklab, var(--primary) 12%, transparent), transparent);
+  animation: recallzero-shimmer 5.8s ease-in-out infinite;
+}
+
+.recall-security-row {
+  animation: recallzero-rise 780ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rz-mark-animated .rz-mark-orbit {
+  transform-origin: 32px 32px;
+  animation: rz-mark-spin 8s linear infinite;
+}
+
+.rz-mark-animated .rz-mark-scan {
+  animation: rz-mark-scan 2.8s ease-in-out infinite;
+}
+
+.rz-mark-animated .rz-mark-pulse {
+  transform-origin: 32px 32px;
+  animation: rz-mark-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes recallzero-pan {
+  from {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+  to {
+    transform: scale(1.04);
+    filter: saturate(1.12);
+  }
+}
+
+@keyframes recallzero-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12%, 72% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes recallzero-orbit {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes recallzero-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes recallzero-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes recallzero-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes recallzero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes recallzero-shimmer {
+  0%, 52% {
+    transform: translateX(-120%);
+  }
+  74%, 100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes rz-mark-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rz-mark-scan {
+  0%, 100% {
+    opacity: 0.34;
+    transform: translateY(-8px) scaleX(0.68);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(8px) scaleX(1);
+  }
+}
+
+@keyframes rz-mark-pulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.78);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.18);
+  }
+}
