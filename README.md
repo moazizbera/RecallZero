@@ -30,6 +30,34 @@ Optionally protect judge entry with a shared code:
 RECALLZERO_JUDGE_ACCESS_CODE=judge-review-code
 ```
 
+## Why DynamoDB Is The Right Database
+
+RecallZero uses Amazon DynamoDB intentionally, not as a checkbox. The dominant access pattern is tenant-scoped operational response: load one workspace, check its credits, write or list its recent incidents, append audit events, read connector configuration, and verify admin/security metadata. DynamoDB fits because those operations are high-volume, key-addressable, time-sensitive, and do not require relational joins during the recall decision path.
+
+One-sentence version for judges: **RecallZero uses DynamoDB because recall teams need predictable low-latency tenant-scoped reads and writes for incidents, credits, connector state, and append-only audit history while fragmented evidence is changing in real time.**
+
+### DynamoDB Data Model
+
+RecallZero uses a single-table design with lowercase `pk` and `sk` keys. Each signed customer or judge workspace receives its own partition, so operational reads stay scoped to one tenant.
+
+| Entity | Partition key | Sort key | Access pattern |
+|---|---|---|---|
+| Workspace profile and credits | `WORKSPACE#<workspaceId>` | `WORKSPACE#default` | Load plan, billing status, monthly credits, and credits used before analysis. |
+| Incident record | `WORKSPACE#<workspaceId>` | `INCIDENT#<incidentId>` | Create or fetch the persisted recall decision record. |
+| Audit event | `WORKSPACE#<workspaceId>` | `AUDIT#<incidentId>#<timestamp>#<eventId>` | Append and replay the decision history for compliance review. |
+| Connector configuration | `WORKSPACE#<workspaceId>` | `CONNECTOR#<connectorKey>` | Load configured supplier, QA, ERP, and complaints source settings. |
+| Admin/security state | `WORKSPACE#<workspaceId>` | `WORKSPACE_ADMIN#default` | Store hashed webhook secret metadata and admin readiness state. |
+
+The app uses `GetCommand`, `PutCommand`, `QueryCommand`, and `BatchWriteCommand` from the AWS SDK for JavaScript. List operations use `pk = :workspacePk AND begins_with(sk, :prefix)`, which avoids table-wide scans in the normal product path.
+
+### Main DynamoDB-Backed Flows
+
+- Sign-in creates or loads a deterministic workspace from the user email domain.
+- Checkout or billing success updates the workspace plan and credit allowance.
+- `/api/analyze` checks intake quality, consumes one workspace credit, creates an incident, and appends an audit event.
+- Connector webhooks validate workspace and secret metadata, consume a credit, create an incident, and preserve the same audit trail.
+- `/settings`, `/dashboard`, `/incidents`, and `/admin` all read the same tenant partition so the UI reflects persisted state rather than demo-only local memory.
+
 ## NotebookLM Video Brief
 
 Use this section as source material for NotebookLM, video narration, and the final hackathon submission edit. The goal is a polished product demo under 3 minutes, focused on the story judges need to understand quickly.
@@ -44,6 +72,7 @@ RecallZero is a recall decision cockpit for regulated commerce teams. It convert
 - RecallZero is not a chatbot and does not claim to make the final legal recall decision alone.
 - RecallZero gives recall teams decision support: posture, confidence, evidence gaps, delay risk, recommended next actions, and auditability.
 - The app is live at `https://recallzero-app.vercel.app`, backed by DynamoDB, with signed sessions, tenant workspaces, credits, connectors, admin controls, and judge access.
+- DynamoDB is intentionally used for tenant-scoped incidents, append-only audit history, workspace credits, connector state, and admin/security metadata.
 - The product has a customer path: free review, Pilot, Program, and Enterprise plans.
 
 ### Best Screens To Capture
@@ -139,11 +168,12 @@ Required video flow:
 4. Show the Analyze workflow using this realistic signal: "Supplier QA alert: Chocolate protein bars SKU CPB-442 lot L-8821 may contain undeclared peanut allergen. 18,400 units shipped to three regional distributors. Two customer complaints reported allergic reaction symptoms. QA has placed remaining inventory on hold and ERP shows 7,200 units already delivered to stores."
 5. Explain the generated decision: recall posture, confidence, missing evidence, delay risk, and recommended next action.
 6. Show that the decision becomes an incident record and audit trail, not just a chat response.
-7. Show connector configuration for supplier inbox, QA system, ERP / lot traceability, and returns / complaints feeds.
-8. Show settings, credits, plans, and usage control.
-9. Show admin readiness: webhook endpoints, secret rotation, production readiness, DynamoDB-backed persistence, and restricted admin access.
-10. Close with the business model: Free review, Pilot, Program, and Enterprise.
-11. End with the live app URL and judge URL.
+7. Explain the database choice in one sentence: RecallZero uses DynamoDB for predictable low-latency tenant-scoped reads/writes across incidents, credits, connector state, and append-only audit history.
+8. Show connector configuration for supplier inbox, QA system, ERP / lot traceability, and returns / complaints feeds.
+9. Show settings, credits, plans, and usage control.
+10. Show admin readiness: webhook endpoints, secret rotation, production readiness, DynamoDB-backed persistence, and restricted admin access.
+11. Close with the business model: Free review, Pilot, Program, and Enterprise.
+12. End with the live app URL and judge URL.
 
 Important positioning:
 Do not claim RecallZero makes a final legal recall decision alone. Say it provides decision support, evidence gaps, delay risk, and auditability for recall teams.
